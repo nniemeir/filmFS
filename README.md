@@ -4,7 +4,7 @@ A FUSE filesystem that allows you to log your viewing habits.
 ## Features
 - [x] Represent video files from library on mountpoint
 - [x] Log reads from media players
-- [] Configuration support*
+- [ ] Configuration support*
 
 \* currently hardcoded in common.h
 
