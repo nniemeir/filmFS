@@ -1,10 +1,5 @@
 #include "video.h"
 #include "common.h"
-#include <ctype.h>
-#include <linux/limits.h>
-
-static const char *video_extensions[NUM_OF_VIDEO_EXTENSIONS] = {"mp4", "mkv",
-                                                                "avi"};
 
 static struct video_files files;
 
@@ -24,6 +19,9 @@ void files_cleanup(void) {
 }
 
 static int has_video_extension(const char *filename) {
+  static const char *video_extensions[NUM_OF_VIDEO_EXTENSIONS] = {"mp4", "mkv",
+                                                                  "avi"};
+
   char *file_extension = strrchr(filename, '.');
   if (!file_extension) {
     return 0;

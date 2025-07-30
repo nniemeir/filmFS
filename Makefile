@@ -14,7 +14,7 @@ OBJS = $(SRC:src/%.c=$(BUILD_DIR)/%.o)
 
 CFLAGS = -Wall -Wextra -pedantic -g -I include
 
-LDFLAGS := $(shell pkg-config fuse --libs)
+LDFLAGS := $(shell pkg-config fuse --libs) -lsqlite3
 CFLAGS += $(shell pkg-config fuse --cflags)
 
 all: bin $(BIN_DIR)/$(NAME)

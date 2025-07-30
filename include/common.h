@@ -5,6 +5,7 @@
 #define LIBRARY_PATH "/mnt/media/Video/Movies/"
 
 #include "errno.h"
+#include <ctype.h>
 #include <fuse.h>
 #include <stdio.h>
 #include <stdlib.h>
