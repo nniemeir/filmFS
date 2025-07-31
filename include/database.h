@@ -4,7 +4,6 @@
 #include "common.h"
 #include <sqlite3.h>
 
-#define PATH_MAX 4096
 #define SQL_COMMAND_MAX 8192
 
 int db_init(void);

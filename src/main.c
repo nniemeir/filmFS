@@ -1,12 +1,17 @@
+#include "config.h"
 #include "database.h"
 #include "operations.h"
 #include "video.h"
 
 int main(int argc, char *argv[]) {
+  if (load_config() == 1) {
+    exit(EXIT_FAILURE);
+  }
+
   if (db_init() == 1) {
     exit(EXIT_FAILURE);
   }
-  
+
   if (library_init() == 1) {
     exit(EXIT_FAILURE);
   }

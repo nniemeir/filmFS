@@ -1,6 +1,6 @@
 SRC := $(wildcard src/*.c)
 
-NAME = filmFS
+NAME = filmfs
 
 DESTDIR = /usr/bin/
 
@@ -9,6 +9,8 @@ CC = gcc
 BIN_DIR = bin
 
 BUILD_DIR = build
+
+CONFIG_DIR = ~/.config/filmfs/
 
 OBJS = $(SRC:src/%.c=$(BUILD_DIR)/%.o)
 
@@ -38,10 +40,11 @@ fclean: clean
 
 install: $(BIN_DIR)/$(NAME) 
 	cp -f -r $(BIN_DIR)/$(NAME) $(DESTDIR)
+	cp config/config $(CONFIG_DIR)
 
 re: fclean all
 
-uninstall: $(NAME)
+uninstall: $(BIN_DIR)/$(NAME)
 	rm -f $(DESTDIR)$(NAME)
 
 .PHONY: all fclean install re uninstall

@@ -2,7 +2,7 @@
 #define COMMON_H
 
 #define FUSE_USE_VERSION 30
-#define LIBRARY_PATH "/mnt/media/Video/Movies/"
+#define PATH_MAX 4096
 
 #include "errno.h"
 #include <ctype.h>

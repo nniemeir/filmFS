@@ -1,4 +1,6 @@
 #include "database.h"
+#include "config.h"
+#include <string.h>
 
 static sqlite3 *db;
 
@@ -20,11 +22,12 @@ int db_insert(const char *path) {
   if (!sql) {
     fprintf(stderr, "Memory allocation failed for sql command string: %s",
             strerror(errno));
+    free(title);
     return 1;
   }
-  
+
   snprintf(sql, SQL_COMMAND_MAX,
-           "INSERT INTO COMPANY (TITLE, WATCHCOUNT) "
+           "INSERT INTO FILMS (TITLE, WATCHCOUNT) "
            "VALUES ('%s', 1) "
            "ON CONFLICT(TITLE) DO UPDATE SET "
            "WATCHCOUNT = WATCHCOUNT + 1, LASTWATCHED = current_timestamp;",
@@ -35,6 +38,7 @@ int db_insert(const char *path) {
   if (sqlite3_exec(db, sql, NULL, 0, &error_msg_buffer) != SQLITE_OK) {
     fprintf(stderr, "SQL Error: %s\n", error_msg_buffer);
     sqlite3_free(error_msg_buffer);
+    error_msg_buffer = NULL;
     free(sql);
     return 1;
   }
@@ -44,7 +48,7 @@ int db_insert(const char *path) {
 }
 
 int create_table(void) {
-  char *sql = "CREATE TABLE IF NOT EXISTS COMPANY("
+  char *sql = "CREATE TABLE IF NOT EXISTS FILMS("
               "ID INTEGER PRIMARY KEY AUTOINCREMENT,"
               "TITLE  TEXT NOT NULL UNIQUE,"
               "WATCHCOUNT INT NOT NULL,"
@@ -55,20 +59,54 @@ int create_table(void) {
   if (sqlite3_exec(db, sql, NULL, 0, &error_msg_buffer) != SQLITE_OK) {
     fprintf(stderr, "SQL Error: %s\n", error_msg_buffer);
     sqlite3_free(error_msg_buffer);
+    error_msg_buffer = NULL;
     return 1;
   }
   return 0;
 }
 
 int db_init(void) {
-  if (sqlite3_open("test.db", &db) == 1) {
+  char *db_path = malloc(PATH_MAX);
+  if (!db_path) {
+    fprintf(stderr, "Memory allocation failed for DB path: %s",
+            strerror(errno));
+    return 1;
+  }
+
+  snprintf(db_path, PATH_MAX, "%s/.filmfs/films.db", get_config()->home);
+
+  char *dir_path = malloc(PATH_MAX);
+  strncpy(dir_path, db_path, PATH_MAX);
+  char *last_slash = strrchr(dir_path, '/');
+  if (last_slash) {
+    *last_slash = '\0';
+  }
+
+  struct stat buffer;
+  if (stat(dir_path, &buffer) == -1) {
+    if (mkdir(dir_path, 0700) == -1) {
+      fprintf(stderr, "Failed to make config directory: %s", strerror(errno));
+      free(db_path);
+      free(dir_path);
+      return 1;
+    }
+  }
+
+  if (sqlite3_open(db_path, &db) == 1) {
     fprintf(stderr, "Failed to open database: %s\n", sqlite3_errmsg(db));
+    free(db_path);
+    free(dir_path);
     return 1;
   }
 
   if (create_table() == 1) {
+    free(db_path);
+    free(dir_path);
     return 1;
   }
+
+  free(db_path);
+  free(dir_path);
 
   return 0;
 }

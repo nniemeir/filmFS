@@ -1,5 +1,6 @@
 #include "operations.h"
 #include "common.h"
+#include "config.h"
 #include "database.h"
 #include "video.h"
 
@@ -71,12 +72,12 @@ static int fs_readdir(const char *path, void *buffer, fuse_fill_dir_t filler,
   return 0;
 }
 
-char *get_process_name(void) {
+char *get_proc_name(void) {
   static const int proc_comm_len =
       16; // Maximum length allowed for this file, see proc_pid_comm manpage
 
-  char *process_name = malloc(proc_comm_len);
-  if (!process_name) {
+  char *proc_name = malloc(proc_comm_len);
+  if (!proc_name) {
     fprintf(stderr, "Memory allocation failed for full_path: %s",
             strerror(errno));
     return NULL;
@@ -86,6 +87,7 @@ char *get_process_name(void) {
   if (!proc_path) {
     fprintf(stderr, "Memory allocation failed for full_path: %s",
             strerror(errno));
+    free(proc_name);
     return NULL;
   }
   snprintf(proc_path, PATH_MAX, "/proc/%d/comm", fuse_get_context()->pid);
@@ -93,56 +95,62 @@ char *get_process_name(void) {
   int fd = open(proc_path, O_RDONLY);
   if (fd == -1) {
     fprintf(stderr, "Failed to open %s: %s", proc_path, strerror(errno));
+    free(proc_name);
     free(proc_path);
     return NULL;
   }
 
-  if (read(fd, process_name, proc_comm_len) == -1) {
+  if (read(fd, proc_name, proc_comm_len) == -1) {
     fprintf(stderr, "Failed to read from file for %s: %s", proc_path,
             strerror(errno));
+    if (close(fd) == -1) {
+      fprintf(stderr, "Failed to close %s: %s", proc_path, strerror(errno));
+    }
+    free(proc_name);
     free(proc_path);
     return NULL;
   }
 
   if (close(fd) == -1) {
     fprintf(stderr, "Failed to close %s: %s", proc_path, strerror(errno));
+    free(proc_name);
     free(proc_path);
     return NULL;
   }
 
   free(proc_path);
 
-  process_name[strcspn(process_name, "\n")] = 0;
+  proc_name[strcspn(proc_name, "\n")] = 0;
 
-  return process_name;
+  return proc_name;
 }
 
 int logging_handle(const char *path) {
   static const char *media_player_comm[NUM_OF_MEDIA_PLAYERS] = {"demux",
                                                                 "vlc:disk$0"};
   static pid_t last_pid = -1;
-  char *process_name = get_process_name();
-  if (!process_name) {
+  char *proc_name = get_proc_name();
+  if (!proc_name) {
     fprintf(stderr, "FAILED TO GET PROCESS NAME\n");
-    return 1;
+    return -EIO;
   }
 
   int caller_is_media_player = 0;
   for (unsigned int i = 0; i < NUM_OF_MEDIA_PLAYERS; i++) {
-    if (strcmp(process_name, media_player_comm[i]) == 0) {
+    if (strcmp(proc_name, media_player_comm[i]) == 0) {
       caller_is_media_player = 1;
       break;
     }
   }
 
-  free(process_name);
+  free(proc_name);
 
   pid_t current_pid = fuse_get_context()->pid;
 
   if (caller_is_media_player == 1 && current_pid != last_pid) {
     last_pid = current_pid;
     if (db_insert(path) == 1) {
-      return 1;
+      return -EFAULT;
     }
   }
 
@@ -151,8 +159,10 @@ int logging_handle(const char *path) {
 
 static int fs_read(const char *path, char *buffer, size_t size, off_t offset,
                    struct fuse_file_info *fi) {
-  if (logging_handle(path) == 1) {
+  int log_res = logging_handle(path);
+  if (log_res != 0) {
     fprintf(stderr, "Failed to log read.\n");
+    return log_res;
   }
   int fd;
   ssize_t result;
@@ -168,7 +178,8 @@ static int fs_read(const char *path, char *buffer, size_t size, off_t offset,
       return -errno;
     }
 
-    snprintf(full_path, PATH_MAX, "%s%s", LIBRARY_PATH, get_files()->names[i]);
+    snprintf(full_path, PATH_MAX, "%s%s", get_config()->library_path,
+             get_files()->names[i]);
 
     if (fi == NULL) {
       fd = open(full_path, O_RDONLY);
@@ -224,7 +235,7 @@ static int fs_open(const char *path, struct fuse_file_info *fi) {
 
   for (unsigned int i = 0; i < get_files()->count; i++) {
     if (strcmp(path + 1, get_files()->names[i]) == 0) {
-      snprintf(full_path, PATH_MAX, "%s%s", LIBRARY_PATH,
+      snprintf(full_path, PATH_MAX, "%s%s", get_config()->library_path,
                get_files()->names[i]);
       int fd = open(full_path, O_RDONLY);
       if (fd == -1) {

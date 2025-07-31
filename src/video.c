@@ -1,5 +1,5 @@
 #include "video.h"
-#include "common.h"
+#include "config.h"
 
 static struct video_files files;
 
@@ -42,6 +42,7 @@ static int has_video_extension(const char *filename) {
 }
 
 int library_init(void) {
+  const char *library_path = get_config()->library_path;
   unsigned int buffer_size = FILES_MAX;
 
   files.names = malloc(buffer_size * sizeof(char *));
@@ -61,9 +62,9 @@ int library_init(void) {
   files.count = 0;
 
   struct dirent *dp;
-  DIR *dir = opendir(LIBRARY_PATH);
+  DIR *dir = opendir(library_path);
   if (!dir) {
-    fprintf(stderr, "Failed to open directory %s: %s", LIBRARY_PATH,
+    fprintf(stderr, "Failed to open directory %s: %s", library_path,
             strerror(errno));
     free(files.names);
     free(files.paths);
@@ -97,7 +98,7 @@ int library_init(void) {
         return 1;
       }
 
-      snprintf(files.paths[files.count], PATH_MAX, "%s%s", LIBRARY_PATH,
+      snprintf(files.paths[files.count], PATH_MAX, "%s%s", library_path,
                dp->d_name);
 
       files.count++;
@@ -129,7 +130,7 @@ int library_init(void) {
   }
 
   if (closedir(dir) == -1) {
-    fprintf(stderr, "Failed to close directory %s: %s", LIBRARY_PATH,
+    fprintf(stderr, "Failed to close directory %s: %s", library_path,
             strerror(errno));
     files_cleanup();
     return 1;
