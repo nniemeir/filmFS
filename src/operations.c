@@ -224,12 +224,6 @@ static int fs_read(const char *path, char *buffer, size_t size, off_t offset,
       }
     }
 
-    if (close(fd) == -1) {
-      fprintf(stderr, "Failed to close %s: %s", full_path, strerror(errno));
-      free(full_path);
-      return -errno;
-    }
-
     free(full_path);
 
     return result;
