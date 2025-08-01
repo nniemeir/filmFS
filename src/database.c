@@ -76,7 +76,7 @@ int db_init(void) {
   const char *home = get_config()->home;
 
   char *db_file_path = "/.filmfs/films.db";
-  const size_t db_path_len = strlen(home) + strlen(db_file_path);
+  const size_t db_path_len = strlen(home) + strlen(db_file_path) + 1;
   if (db_path_len > PATH_MAX) {
     fprintf(stderr,
             "Database file path exceeds PATH_MAX, this should not happen.");
