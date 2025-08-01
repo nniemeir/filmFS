@@ -5,9 +5,10 @@
 #include "video.h"
 
 static int get_file_status(const char *path, struct stat *file_stat) {
-  for (unsigned int i = 0; i < get_files()->count; i++) {
-    if (strcmp(path + 1, get_files()->names[i]) == 0) {
-      int result = stat(get_files()->paths[i], file_stat);
+  struct video_files *files = get_files();
+  for (unsigned int i = 0; i < files->count; i++) {
+    if (strcmp(path + 1, files->names[i]) == 0) {
+      int result = stat(files->paths[i], file_stat);
       if (result == -1) {
         fprintf(stderr, "Failed to get file status for %s: %s", path,
                 strerror(errno));
@@ -54,18 +55,21 @@ static int fs_getattr(const char *path, struct stat *st) {
   return 0;
 }
 
-// filler is a function sent by fuse and can be used to fill buffer with
+// filler is a FUSE function that can be used to fill buffer with
 // available files in path
 static int fs_readdir(const char *path, void *buffer, fuse_fill_dir_t filler,
                       off_t offset, struct fuse_file_info *fi) {
   (void)offset;
   (void)(fi);
+
+  struct video_files *files = get_files();
+
   filler(buffer, ".", NULL, 0);  // Current Directory
   filler(buffer, "..", NULL, 0); // Parent Directory
 
   if (strcmp(path, "/") == 0) {
-    for (unsigned int i = 0; i < get_files()->count; i++) {
-      filler(buffer, get_files()->names[i], NULL, 0);
+    for (unsigned int i = 0; i < files->count; i++) {
+      filler(buffer, files->names[i], NULL, 0);
     }
   }
 
@@ -159,6 +163,8 @@ int logging_handle(const char *path) {
 
 static int fs_read(const char *path, char *buffer, size_t size, off_t offset,
                    struct fuse_file_info *fi) {
+  struct video_files *files = get_files();
+
   int log_res = logging_handle(path);
   if (log_res != 0) {
     fprintf(stderr, "Failed to log read.\n");
@@ -166,8 +172,8 @@ static int fs_read(const char *path, char *buffer, size_t size, off_t offset,
   }
   int fd;
   ssize_t result;
-  for (unsigned int i = 0; i < get_files()->count; i++) {
-    if (strcmp(path + 1, get_files()->names[i]) != 0) {
+  for (unsigned int i = 0; i < files->count; i++) {
+    if (strcmp(path + 1, files->names[i]) != 0) {
       continue;
     }
 
@@ -179,7 +185,7 @@ static int fs_read(const char *path, char *buffer, size_t size, off_t offset,
     }
 
     snprintf(full_path, PATH_MAX, "%s%s", get_config()->library_path,
-             get_files()->names[i]);
+             files->names[i]);
 
     if (fi == NULL) {
       fd = open(full_path, O_RDONLY);
@@ -218,6 +224,12 @@ static int fs_read(const char *path, char *buffer, size_t size, off_t offset,
       }
     }
 
+    if (close(fd) == -1) {
+      fprintf(stderr, "Failed to close %s: %s", full_path, strerror(errno));
+      free(full_path);
+      return -errno;
+    }
+
     free(full_path);
 
     return result;
@@ -226,6 +238,8 @@ static int fs_read(const char *path, char *buffer, size_t size, off_t offset,
 }
 
 static int fs_open(const char *path, struct fuse_file_info *fi) {
+  struct video_files *files = get_files();
+
   char *full_path = malloc(PATH_MAX);
   if (!full_path) {
     fprintf(stderr, "Memory allocation failed for full_path: %s",
@@ -233,10 +247,10 @@ static int fs_open(const char *path, struct fuse_file_info *fi) {
     return -errno;
   }
 
-  for (unsigned int i = 0; i < get_files()->count; i++) {
-    if (strcmp(path + 1, get_files()->names[i]) == 0) {
+  for (unsigned int i = 0; i < files->count; i++) {
+    if (strcmp(path + 1, files->names[i]) == 0) {
       snprintf(full_path, PATH_MAX, "%s%s", get_config()->library_path,
-               get_files()->names[i]);
+               files->names[i]);
       int fd = open(full_path, O_RDONLY);
       if (fd == -1) {
         fprintf(stderr, "Failed to open %s: %s", full_path, strerror(errno));

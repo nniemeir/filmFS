@@ -112,11 +112,24 @@ int parse_configuration(char *config_file_contents) {
   for (unsigned int i = 0; i < config.vars_count; i++) {
     if (strcmp(config.vars[i].name, "LIBRARY_PATH") == 0) {
       config.library_path = config.vars[i].value;
+      size_t library_path_len = strlen(config.library_path);
+      if (config.library_path[library_path_len - 1] != '/') {
+        if (library_path_len + 1 < PATH_MAX) {
+          config.library_path[library_path_len] = '/';
+          config.library_path[library_path_len + 1] = '\0';
+        } else {
+          fprintf(stderr, "PATH_MAX exceeded for library path.\n");
+          cleanup_vars();
+          return 1;
+        }
+      }
       continue;
     }
     if (strcmp(config.vars[i].name, "DEBUG") == 0) {
       if (strcmp(config.vars[i].value, "TRUE") == 0) {
         config.debug = 1;
+      } else {
+        config.debug = 0;
       }
     }
   }

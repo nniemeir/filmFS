@@ -16,6 +16,12 @@ int db_insert(const char *path) {
   }
 
   char *extension = strrchr(title, '.');
+  if (!extension) {
+    fprintf(stderr, "Missing extension in filename. This should not happen.");
+    free(title);
+    return 1;
+  }
+
   *extension = '\0';
 
   char *sql = malloc(SQL_COMMAND_MAX);
@@ -66,17 +72,28 @@ int create_table(void) {
 }
 
 int db_init(void) {
-  char *db_path = malloc(PATH_MAX);
+  static const int dir_path_permissions = 0700; // RWE for owner, none otherwise
+  const char *home = get_config()->home;
+
+  char *db_file_path = "/.filmfs/films.db";
+  const size_t db_path_len = strlen(home) + strlen(db_file_path);
+  if (db_path_len > PATH_MAX) {
+    fprintf(stderr,
+            "Database file path exceeds PATH_MAX, this should not happen.");
+    return 1;
+  }
+
+  char *db_path = malloc(db_path_len + 1);
   if (!db_path) {
     fprintf(stderr, "Memory allocation failed for DB path: %s",
             strerror(errno));
     return 1;
   }
 
-  snprintf(db_path, PATH_MAX, "%s/.filmfs/films.db", get_config()->home);
+  snprintf(db_path, db_path_len, "%s%s", home, db_file_path);
 
-  char *dir_path = malloc(PATH_MAX);
-  strncpy(dir_path, db_path, PATH_MAX);
+  char *dir_path = malloc(db_path_len);
+  strncpy(dir_path, db_path, db_path_len);
   char *last_slash = strrchr(dir_path, '/');
   if (last_slash) {
     *last_slash = '\0';
@@ -84,7 +101,7 @@ int db_init(void) {
 
   struct stat buffer;
   if (stat(dir_path, &buffer) == -1) {
-    if (mkdir(dir_path, 0700) == -1) {
+    if (mkdir(dir_path, dir_path_permissions) == -1) {
       fprintf(stderr, "Failed to make config directory: %s", strerror(errno));
       free(db_path);
       free(dir_path);
