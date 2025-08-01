@@ -30,7 +30,7 @@ make
 ```
 Install the compiled binary
 ```
-sudo make install
+make install
 ```
 
 ### Make Targets 

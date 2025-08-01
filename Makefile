@@ -2,7 +2,7 @@ SRC := $(wildcard src/*.c)
 
 NAME = filmfs
 
-DESTDIR = /usr/bin/
+DESTDIR = ~/.local/bin/
 
 CC = gcc
 
@@ -39,8 +39,9 @@ fclean: clean
 	rm -rf $(BIN_DIR)
 
 install: $(BIN_DIR)/$(NAME) 
+	mkdir $(DESTDIR)
 	cp -f -r $(BIN_DIR)/$(NAME) $(DESTDIR)
-	cp config/config $(CONFIG_DIR)
+	cp -n config/config $(CONFIG_DIR)
 
 re: fclean all
 
