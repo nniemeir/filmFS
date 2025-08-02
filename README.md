@@ -57,4 +57,5 @@ filmfs ~/Films/
 
 ## License
 GNU General Public License V2
+
 Copyright (c) 2025 Jacob Niemeir
