@@ -56,5 +56,5 @@ filmfs ~/Films/
 * Play films through the mountpoint rather than LIBRARY_PATH itself
 
 ## License
-GNU GENERAL PUBLIC LICENSE V2
+GNU General Public License V2
 Copyright (c) 2025 Jacob Niemeir
