@@ -4,9 +4,7 @@ A FUSE filesystem for Linux that allows you to log your viewing habits.
 ## Features
 * Allows read-only access to video files in library path within mountpoint
 * Logs film title, times watched, and last watched in ~/.filmfs/films.db
-* Inspect logs using watchlistViewer*
-
-\* Not yet implemented
+* Inspect logs using [watchlistViewer](https://github.com/nniemeir/watchlistViewer)
 
 ## Configuration
 The configuration file is stored at ~/.config/filmfs/config, the variable LIBRARY_PATH must be set before filmFS can be used.
