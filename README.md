@@ -17,7 +17,6 @@ DEBUG=FALSE
 ## Dependencies
 * GCC
 * GNU make
-* gzip
 * FUSE development libraries
 * SQLite development libraries
 
