@@ -19,8 +19,9 @@ void files_cleanup(void) {
 }
 
 static int has_video_extension(const char *filename) {
-  static const char *video_extensions[NUM_OF_VIDEO_EXTENSIONS] = {"mp4", "mkv",
-                                                                  "avi"};
+  static const char *video_extensions[NUM_OF_VIDEO_EXTENSIONS] = {
+      "3gp", "avi", "flv", "ogv",  "m4v", "mov",
+      "mkv", "mp4", "mpg", "mpeg", "webm"};
 
   char *file_extension = strrchr(filename, '.');
   if (!file_extension) {

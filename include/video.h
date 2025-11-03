@@ -5,7 +5,7 @@
 #include <dirent.h>
 
 #define FILES_MAX 64
-#define NUM_OF_VIDEO_EXTENSIONS 3
+#define NUM_OF_VIDEO_EXTENSIONS 11
 
 struct video_files {
   char **names;
