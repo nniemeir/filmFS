@@ -3,6 +3,7 @@
 
 #include "common.h"
 #include <dirent.h>
+#include <stdbool.h>
 
 #define FILES_MAX 64
 #define NUM_OF_VIDEO_EXTENSIONS 11

@@ -18,14 +18,14 @@ void files_cleanup(void) {
   free(files.paths);
 }
 
-static int has_video_extension(const char *filename) {
+static bool has_video_extension(const char *filename) {
   static const char *video_extensions[NUM_OF_VIDEO_EXTENSIONS] = {
       "3gp", "avi", "flv", "ogv",  "m4v", "mov",
       "mkv", "mp4", "mpg", "mpeg", "webm"};
 
   char *file_extension = strrchr(filename, '.');
   if (!file_extension) {
-    return 0;
+    return false;
   }
 
   file_extension++;
@@ -36,10 +36,10 @@ static int has_video_extension(const char *filename) {
 
   for (unsigned int i = 0; i < NUM_OF_VIDEO_EXTENSIONS; i++) {
     if (strcmp(file_extension, video_extensions[i]) == 0) {
-      return 1;
+      return true;
     }
   }
-  return 0;
+  return false;
 }
 
 int library_init(void) {
@@ -74,7 +74,7 @@ int library_init(void) {
 
   while ((dp = readdir(dir))) {
     if (dp->d_type == DT_REG) {
-      if (has_video_extension(dp->d_name) == 0) {
+      if (!has_video_extension(dp->d_name) == 0) {
         continue;
       }
 
