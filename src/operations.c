@@ -226,7 +226,7 @@ static int fs_read(const char *path, char *buffer, size_t size, off_t offset,
 
     free(full_path);
 
-    return result;
+    return bytes_read;
   }
   return -ENOENT;
 }
