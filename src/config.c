@@ -189,7 +189,12 @@ int load_config(void) {
   free(config_file_contents);
 
   if (stat(config.library_path, &buffer) == -1) {
-    fprintf(stderr, "LIBRARY_PATH does not exist.\n");
+    fprintf(stderr, "Invalid LIBRARY_PATH: %s\n", strerror(errno));
+    return 1;
+  }
+
+  if (!S_ISDIR(buffer.st_mode)) {
+    fprintf(stderr, "LIBRARY_PATH must refer to a directory.\n");
     return 1;
   }
 
