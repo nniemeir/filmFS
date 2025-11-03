@@ -188,5 +188,10 @@ int load_config(void) {
 
   free(config_file_contents);
 
+  if (stat(config.library_path, &buffer) == -1) {
+    fprintf(stderr, "LIBRARY_PATH does not exist.\n");
+    return 1;
+  }
+
   return 0;
 }
